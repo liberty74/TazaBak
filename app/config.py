@@ -1,4 +1,4 @@
-"""Application configuration and domain constants."""
+
 
 from __future__ import annotations
 
