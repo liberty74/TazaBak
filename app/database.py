@@ -84,3 +84,13 @@ def apply_compatibility_migrations() -> None:
         if "camera_stream_url" not in device_columns:
             connection.execute(text("ALTER TABLE devices ADD COLUMN camera_stream_url VARCHAR(512)"))
             logger.info("Applied SQLite migration: devices.camera_stream_url")
+
+        vision_columns = {
+            row["name"]
+            for row in connection.execute(text("PRAGMA table_info(vision_frames)")).mappings()
+        }
+        if vision_columns and "detections" not in vision_columns:
+            connection.execute(
+                text("ALTER TABLE vision_frames ADD COLUMN detections JSON NOT NULL DEFAULT '[]'")
+            )
+            logger.info("Applied SQLite migration: vision_frames.detections")

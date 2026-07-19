@@ -65,19 +65,27 @@ class Settings:
     )
     cors_origin_regex: str = os.getenv(
         "CORS_ORIGIN_REGEX",
-        r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+        # Localhost and private LAN origins allow a phone on the same Wi-Fi to
+        # use the development frontend without opening CORS to the internet.
+        r"https?://(?:(?:localhost|127\.0\.0\.1)|(?:10(?:\.\d{1,3}){3})|(?:192\.168(?:\.\d{1,3}){2})|(?:172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}))(?::\d+)?",
     )
 
-    # Municipal container constants.
-    h_empty_cm: float = _env_float("H_EMPTY_CM", 100.0)
-    h_full_cm: float = _env_float("H_FULL_CM", 10.0)
+    # Physical calibration of the 25 cm TazaBAK municipal prototype.
+    # HC-SR04 distance is measured from the lid down to the waste surface.
+    h_empty_cm: float = _env_float("H_EMPTY_CM", 25.0)
+    h_full_cm: float = _env_float("H_FULL_CM", 7.0)
     ema_alpha: float = _env_float("EMA_ALPHA", 0.3)
+    retired_municipal_device_ids: tuple[str, ...] = _env_csv(
+        "RETIRED_MUNICIPAL_DEVICE_IDS", ("municipal-rio-001",)
+    )
 
-    # Fire risk model constants.
+    # FireScore remains in telemetry as diagnostic analytics only. The safety
+    # interlock itself is an absolute reading from the one installed DS18B20.
     fire_weight_delta: float = _env_float("FIRE_WEIGHT_DELTA", 0.7)
     fire_weight_rate: float = _env_float("FIRE_WEIGHT_RATE", 0.3)
-    fire_threshold: float = _env_float("FIRE_THRESHOLD", 15.0)
-    fire_required_streak: int = _env_int("FIRE_REQUIRED_STREAK", 2)
+    fire_temperature_threshold_c: float = _env_float(
+        "FIRE_TEMPERATURE_THRESHOLD_C", 50.0
+    )
     min_rate_interval_seconds: float = _env_float(
         "MIN_RATE_INTERVAL_SECONDS", 1.0
     )
@@ -97,6 +105,35 @@ class Settings:
     vision_detection_probability: float = _env_float(
         "VISION_DETECTION_PROBABILITY", 0.35
     )
+    camera_analysis_enabled: bool = _env_bool("CAMERA_ANALYSIS_ENABLED", True)
+    camera_analysis_interval_seconds: float = _env_float(
+        "CAMERA_ANALYSIS_INTERVAL_SECONDS", 5.0
+    )
+    camera_capture_timeout_seconds: float = _env_float(
+        "CAMERA_CAPTURE_TIMEOUT_SECONDS", 5.0
+    )
+    camera_alert_cooldown_seconds: int = _env_int(
+        "CAMERA_ALERT_COOLDOWN_SECONDS", 300
+    )
+    camera_frame_retention: int = _env_int("CAMERA_FRAME_RETENTION", 100)
+    camera_illegal_dump_min_objects: int = _env_int(
+        "CAMERA_ILLEGAL_DUMP_MIN_OBJECTS", 3
+    )
+    camera_illegal_dump_classes: tuple[str, ...] = _env_csv(
+        "CAMERA_ILLEGAL_DUMP_CLASSES",
+        (
+            "bottle",
+            "cup",
+            "bowl",
+            "banana",
+            "apple",
+            "orange",
+            "sandwich",
+            "backpack",
+            "handbag",
+            "suitcase",
+        ),
+    )
     bio_reward_points: int = _env_int("BIO_REWARD_POINTS", 15)
     nft_price_points: int = _env_int("NFT_PRICE_POINTS", 100)
     yolo_model_path: str = os.getenv("YOLO_MODEL_PATH", "yolov8n.pt")
@@ -114,8 +151,10 @@ class Settings:
             raise ValueError("H_EMPTY_CM must be greater than H_FULL_CM")
         if not 0.0 < self.ema_alpha <= 1.0:
             raise ValueError("EMA_ALPHA must be in the (0, 1] interval")
-        if self.fire_required_streak < 1:
-            raise ValueError("FIRE_REQUIRED_STREAK must be at least 1")
+        if not 0.0 < self.fire_temperature_threshold_c <= 250.0:
+            raise ValueError(
+                "FIRE_TEMPERATURE_THRESHOLD_C must be in the (0, 250] interval"
+            )
         if self.min_rate_interval_seconds <= 0:
             raise ValueError("MIN_RATE_INTERVAL_SECONDS must be positive")
         if self.websocket_send_timeout_seconds <= 0:
@@ -150,6 +189,16 @@ class Settings:
         ):
             if not 0.0 <= probability <= 1.0:
                 raise ValueError(f"{name} must be in the [0, 1] interval")
+        if self.camera_analysis_interval_seconds < 1:
+            raise ValueError("CAMERA_ANALYSIS_INTERVAL_SECONDS must be at least 1")
+        if self.camera_capture_timeout_seconds <= 0:
+            raise ValueError("CAMERA_CAPTURE_TIMEOUT_SECONDS must be positive")
+        if self.camera_alert_cooldown_seconds < 0:
+            raise ValueError("CAMERA_ALERT_COOLDOWN_SECONDS must not be negative")
+        if self.camera_frame_retention < 1:
+            raise ValueError("CAMERA_FRAME_RETENTION must be at least 1")
+        if self.camera_illegal_dump_min_objects < 1:
+            raise ValueError("CAMERA_ILLEGAL_DUMP_MIN_OBJECTS must be at least 1")
 
 
 settings = Settings()

@@ -360,6 +360,9 @@ class VisionFrame(Base):
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     detected: Mapped[bool] = mapped_column(Boolean, nullable=False)
     confidence: Mapped[float | None] = mapped_column(Float)
+    detections: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
     alert_id: Mapped[int | None] = mapped_column(
         ForeignKey("alerts.id", ondelete="SET NULL")
     )

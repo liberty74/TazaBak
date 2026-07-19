@@ -313,6 +313,18 @@ class CameraStreamUpdate(BaseModel):
         return value
 
 
+class CameraAnalysisResponse(BaseModel):
+    status: Literal["processed"] = "processed"
+    frame_id: int
+    device_id: str
+    detected: bool
+    confidence: float | None = None
+    detected_objects: list[DetectedObjectResponse]
+    image_url: str
+    alert_id: int | None = None
+    created_at: datetime
+
+
 class ForumMessageCreate(BaseModel):
     model_config = ConfigDict(
         extra="forbid", str_strip_whitespace=True, coerce_numbers_to_str=True
