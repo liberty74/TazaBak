@@ -6,6 +6,7 @@ import type { CameraAnalysis, Container, DeviceTelemetryStatus } from '../../api
 import { useAuth } from '../../store/AuthContext';
 import { handleApiError } from '../../api/errors';
 import { toast } from 'sonner';
+import { createRequestId } from '../../lib/utils';
 
 const lidIsClosed = (status: string) => status.startsWith('CLOSE') || status === 'CLOSED';
 const temperatureStyle = (temperature: number | null | undefined) => {
@@ -36,7 +37,7 @@ export default function DevicesPage() {
 
   const commandMutation = useMutation({
     mutationFn: ({ deviceId, action }: { deviceId: string; action: 'OPEN_LID' | 'CLOSE_LID' }) =>
-      sendDeviceCommand(deviceId, user?.id ?? 'dispatcher-1', action, crypto.randomUUID()),
+      sendDeviceCommand(deviceId, user?.id ?? 'dispatcher-1', action, createRequestId()),
     onSuccess: (command) => {
       toast.success(`Команда ${command.action === 'OPEN_LID' ? 'открытия' : 'закрытия'} отправлена: ${command.status}`);
       queryClient.invalidateQueries({ queryKey: queryKeys.dispatcher.deviceStatuses });

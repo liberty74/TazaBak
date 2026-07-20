@@ -7,6 +7,7 @@ import { analyzeBio, BioResponse } from '../api';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys, handleApiError } from '../api';
 import { QRCodeSVG } from 'qrcode.react';
+import { createRequestId } from '../lib/utils';
 
 const RESULT_QR_CODES: Record<BioResponse['status'], string> = {
   approve: 'good123',
@@ -20,7 +21,7 @@ export default function ScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<BioResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(createRequestId);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function ScanPage() {
     setPreviewUrl(null);
     setResult(null);
     setError(null);
-    setIdempotencyKey(crypto.randomUUID());
+    setIdempotencyKey(createRequestId());
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 

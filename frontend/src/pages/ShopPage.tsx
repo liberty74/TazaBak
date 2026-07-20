@@ -9,6 +9,7 @@ import { useLocaleTheme } from '../store/LocaleThemeContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import EcoNftImage from '../components/common/EcoNftImage';
+import { createRequestId } from '../lib/utils';
 
 export const NFT_PRICE_POINTS = 100;
 
@@ -38,7 +39,7 @@ export default function ShopPage() {
     if (!user?.id) return;
     setBuyingId(itemId);
     try {
-      const idempotencyKey = crypto.randomUUID();
+      const idempotencyKey = createRequestId();
       const res = await buyShopItem(user.id, itemId, idempotencyKey);
       toast.success('Товар успешно приобретен!');
       queryClient.invalidateQueries({ queryKey: queryKeys.user.profile(user.id) });
@@ -68,7 +69,7 @@ export default function ShopPage() {
 
     setIsMinting(true);
     try {
-      const idempotencyKey = crypto.randomUUID();
+      const idempotencyKey = createRequestId();
       const res = await mintNft(user.id, mintTitle, idempotencyKey);
       setRevealedNft(res.nft);
       toast.success(`NFT успешно создан! Списано баллов: ${res.price_points}. Новый баланс: ${res.current_balance}`);

@@ -9,6 +9,7 @@ import { useLocaleTheme } from '../../store/LocaleThemeContext';
 import { Container } from '../../api/types';
 import { MapPin, Battery, Activity, Flame, Unlock, Lock, Loader2, Radio, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { createRequestId } from '../../lib/utils';
 
 export default function DispatcherMapPage() {
   const kokshetauCenter = [53.2846, 69.3833] as [number, number];
@@ -29,7 +30,7 @@ export default function DispatcherMapPage() {
 
   const commandMutation = useMutation({
     mutationFn: (args: { deviceId: string, action: 'OPEN_LID' | 'CLOSE_LID' }) => 
-      sendDeviceCommand(args.deviceId, user?.id || 0, args.action, crypto.randomUUID()),
+      sendDeviceCommand(args.deviceId, user?.id || 0, args.action, createRequestId()),
     onSuccess: (data) => {
       toast.success(`Команда ${data.action} отправлена (ID: ${data.id})`);
       queryClient.invalidateQueries({ queryKey: queryKeys.containers(false) });
